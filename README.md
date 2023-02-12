@@ -1,6 +1,6 @@
 # LeggedRobotController
 基于convexMPC算法的多足机器人运动控制器，使用Python复现了MIT Chteeah3的控制框架。
-搭建了基于Mujoco的多足机器人方仿真环境。
+搭建了基于Mujoco的多足机器人仿真环境。
 
 ## Requirements
   * OSQP

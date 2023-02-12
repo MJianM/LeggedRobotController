@@ -1,0 +1,256 @@
+<mujoco model="LittleDog">
+  <compiler angle="radian" autolimits="true"/>
+  <size njmax="500" nconmax="1000"/>
+  <option timestep="0.005" iterations="50" tolerance="1e-10" solver="Newton" jacobian="dense" cone="pyramidal"/>
+  <default>
+    <joint ref="0" armature="0.02"/>
+    <geom condim="3" material="matgeom"/>
+    <motor ctrlrange="-1.0 1.0" ctrllimited="true"/>
+  </default>
+  <visual>
+    <map force="0.1" zfar="30"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <quality shadowsize="2048"/>
+    <global offwidth="800" offheight="800"/>
+  </visual>
+  <asset>
+    <mesh name="base" file="meshes/base.STL"/>
+    <mesh name="rf_hip" file="meshes/rm_hip.STL"/>
+    <mesh name="rf_leg" file="meshes/rm_leg.STL"/>
+    <mesh name="rf_foot" file="meshes/rm_foot.STL"/>
+    <mesh name="rm_hip" file="meshes/rm_hip.STL"/>
+    <mesh name="rm_leg" file="meshes/rm_leg.STL"/>
+    <mesh name="rm_foot" file="meshes/rm_foot.STL"/>
+    <mesh name="rb_hip" file="meshes/rb_hip.STL"/>
+    <mesh name="rb_leg" file="meshes/rb_leg.STL"/>
+    <mesh name="rb_foot" file="meshes/rb_foot.STL"/>
+    <mesh name="lb_hip" file="meshes/lb_hip.STL"/>
+    <mesh name="lb_leg" file="meshes/lb_leg.STL"/>
+    <mesh name="lb_foot" file="meshes/lb_foot.STL"/>
+    <mesh name="lm_hip" file="meshes/lm_hip.STL"/>
+    <mesh name="lm_leg" file="meshes/lm_leg.STL"/>
+    <mesh name="lm_foot" file="meshes/lm_foot.STL"/>
+    <mesh name="lf_hip" file="meshes/lm_hip.STL"/>
+    <mesh name="lf_leg" file="meshes/lm_leg.STL"/>
+    <mesh name="lf_foot" file="meshes/lm_foot.STL"/>
+
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="512" />
+    <texture name="texplane" type="2d" builtin="checker" rgb1=".2 .3 .4" rgb2=".1 0.15 0.2" width="512" height="512" mark="cross" markrgb=".8 .8 .8" />
+    <texture name="texgeom" type="cube" builtin="flat" mark="cross" width="127" height="1278"
+            rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" markrgb="1 1 1" random="0.01"/>
+    <material name="matplane" reflectance="0.3" texture="texplane" texrepeat="1 1" texuniform="true" />
+    <material name="matgeom" texture="texgeom" texuniform="true" rgba="0.8 0.6 .4 1"/>
+    <hfield name="myfield" file="meshes/test.png" size="2 1 0.18 0.1" />
+  </asset>
+
+
+  <worldbody>
+    <light directional="true" diffuse=".4 .4 .4" specular="0.1 0.1 0.1" pos="0 0 5.0" dir="0 0 -1" castshadow="false" />
+    <light directional="true" diffuse=".6 .6 .6" specular="0.2 0.2 0.2" pos="0 0 4" dir="0 0 -1" />
+    <!-- <geom name="floor" pos="0 0 -.0" size="0 0 1"  material="matplane" conaffinity="1" condim="3" friction="1 0.005 0.0001" rgba="0.8 0.9 0.8 1" type="hfield" hfield="myfield"/> -->
+    <geom name="floor" pos="0 0 0" size="0 0 0.25" type="plane" material="matplane" condim="3" friction="1 0.005 0.0001" />
+
+    <body name="base" pos="0 0 0.55">
+      <inertial pos="0 0 0" quat="0 0.707107 0 0.707107" mass="21" diaginertia="2.8097 2.5396 0.597765"/>
+      <joint name="floating_joint" type="free"/>
+      <geom type="mesh" rgba="0.64706 0.61961 0.58824 1" mesh="base"/>
+      <site name="bcs" pos="0 0 0"/>
+      <body name="rf_hip" pos="0.33 -0.053 0">
+        <inertial pos="0 2.2766e-11 0" quat="0.707107 0 0 0.707107" mass="0.1" diaginertia="0.00021251 0.00011469 0.00011468"/>
+        <joint name="rf_hip_joint" pos="0 0 0" axis="1 0 0" range="-3.14 3.14"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="rf_hip"/>
+        <body name="rf_leg" pos="0 0 0">
+          <inertial pos="-1.9058e-06 -0.058704 -0.040094" quat="0.705216 -0.0504844 0.0504862 0.705388" mass="0.3" diaginertia="0.00216721 0.0020755 0.000259102"/>
+          <joint name="rf_leg_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+          <geom type="mesh" rgba="1 1 1 1" mesh="rf_leg"/>
+          <body name="rf_foot" pos="0 -0.08025 -0.249">
+            <inertial pos="0 0 -0.12266" quat="0.707107 0 0 0.707107" mass="0.2" diaginertia="0.0014468 0.0014384 2.4077e-05"/>
+            <joint name="rf_foot_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+            <geom type="mesh" rgba="1 1 1 1" mesh="rf_foot"/>
+            <site name="L0_footend" pos="0 0 -0.24532" size="0.035 0.035 0.035" type="sphere" rgba="1 1 1 0.1"/>
+          </body>
+        </body>
+      </body>
+      <body name="rm_hip" pos="0 -0.19025 0">
+        <inertial pos="0 2.2766e-11 0" quat="0.707107 0 0 0.707107" mass="0.1" diaginertia="0.00021251 0.00011469 0.00011468"/>
+        <joint name="rm_hip_joint" pos="0 0 0" axis="1 0 0" range="-3.14 3.14"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="rm_hip"/>
+        <body name="rm_leg" pos="0 0 0">
+          <inertial pos="-1.9058e-06 -0.058704 -0.040094" quat="0.705216 -0.0504844 0.0504862 0.705388" mass="0.3" diaginertia="0.00216721 0.0020755 0.000259102"/>
+          <joint name="rm_leg_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+          <geom type="mesh" rgba="1 1 1 1" mesh="rm_leg"/>
+          <body name="rm_foot" pos="0 -0.08025 -0.249">
+            <inertial pos="0 0 -0.12266" quat="0.707107 0 0 0.707107" mass="0.2" diaginertia="0.0014468 0.0014384 2.4077e-05"/>
+            <joint name="rm_foot_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+            <geom type="mesh" rgba="1 1 1 1" mesh="rm_foot"/>
+            <site name="L1_footend" pos="0 0 -0.24532" size="0.035 0.035 0.035" type="sphere" rgba="1 1 1 0.1"/>
+          </body>
+        </body>
+      </body>
+      <body name="rb_hip" pos="-0.33 -0.053 0">
+        <inertial pos="0 2.2766e-11 0" quat="0.707107 0 0 0.707107" mass="0.1" diaginertia="0.00021251 0.00011469 0.00011468"/>
+        <joint name="rb_hip_joint" pos="0 0 0" axis="1 0 0" range="-3.14 3.14"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="rb_hip"/>
+        <body name="rb_leg" pos="0 0 0">
+          <inertial pos="-1.9058e-06 -0.058704 -0.040094" quat="0.705216 -0.0504844 0.0504862 0.705388" mass="0.3" diaginertia="0.00216721 0.0020755 0.000259102"/>
+          <joint name="rb_leg_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+          <geom type="mesh" rgba="1 1 1 1" mesh="rb_leg"/>
+          <body name="rb_foot" pos="0 -0.08025 -0.249">
+            <inertial pos="0 0 -0.12266" quat="0.707107 0 0 0.707107" mass="0.2" diaginertia="0.0014468 0.0014384 2.4077e-05"/>
+            <joint name="rb_foot_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+            <geom type="mesh" rgba="1 1 1 1" mesh="rb_foot"/>
+            <site name="L2_footend" pos="0 0 -0.24532" size="0.035 0.035 0.035" type="sphere" rgba="1 1 1 0.1"/>
+          </body>
+        </body>
+      </body>
+      <body name="lb_hip" pos="-0.33 0.053 0">
+        <inertial pos="0 -2.2766e-11 0" quat="0.707107 0 0 0.707107" mass="0.1" diaginertia="0.00021251 0.00011469 0.00011468"/>
+        <joint name="lb_hip_joint" pos="0 0 0" axis="1 0 0" range="-3.14 3.14"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="lb_hip"/>
+        <body name="lb_leg" pos="0 0 0">
+          <inertial pos="1.9058e-06 0.058704 -0.040094" quat="0.705216 0.0504844 -0.0504862 0.705388" mass="0.3" diaginertia="0.00216721 0.0020755 0.000259102"/>
+          <joint name="lb_leg_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+          <geom type="mesh" rgba="1 1 1 1" mesh="lb_leg"/>
+          <body name="lb_foot" pos="0 0.08025 -0.249">
+            <inertial pos="0 0 -0.12266" quat="0.707107 0 0 0.707107" mass="0.2" diaginertia="0.0014468 0.0014384 2.4077e-05"/>
+            <joint name="lb_foot_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+            <geom type="mesh" rgba="1 1 1 1" mesh="lb_foot"/>
+            <site name="L3_footend" pos="0 0 -0.24532" size="0.035 0.035 0.035" type="sphere" rgba="1 1 1 0.1"/>
+          </body>
+        </body>
+      </body>
+      <body name="lm_hip" pos="0 0.19025 0">
+        <inertial pos="0 -2.2766e-11 0" quat="0.707107 0 0 0.707107" mass="0.1" diaginertia="0.00021251 0.00011469 0.00011468"/>
+        <joint name="lm_hip_joint" pos="0 0 0" axis="1 0 0" range="-3.14 3.14"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="lm_hip"/>
+        <body name="lm_leg" pos="0 0 0">
+          <inertial pos="1.9058e-06 0.058704 -0.040094" quat="0.705216 0.0504844 -0.0504862 0.705388" mass="0.3" diaginertia="0.00216721 0.0020755 0.000259102"/>
+          <joint name="lm_leg_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+          <geom type="mesh" rgba="1 1 1 1" mesh="lm_leg"/>
+          <body name="lm_foot" pos="0 0.08025 -0.249">
+            <inertial pos="0 0 -0.12266" quat="0.707107 0 0 0.707107" mass="0.2" diaginertia="0.0014468 0.0014384 2.4077e-05"/>
+            <joint name="lm_foot_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+            <geom type="mesh" rgba="1 1 1 1" mesh="lm_foot"/>
+            <site name="L4_footend" pos="0 0 -0.24532" size="0.035 0.035 0.035" type="sphere" rgba="1 1 1 0.1"/>
+          </body>
+        </body>
+      </body>
+      <body name="lf_hip" pos="0.33 0.053 0">
+        <inertial pos="0 -2.2766e-11 0" quat="0.707107 0 0 0.707107" mass="0.1" diaginertia="0.00021251 0.00011469 0.00011468"/>
+        <joint name="lf_hip_joint" pos="0 0 0" axis="1 0 0" range="-3.14 3.14"/>
+        <geom type="mesh" rgba="1 1 1 1" mesh="lf_hip"/>
+        <body name="lf_leg" pos="0 0 0">
+          <inertial pos="1.9058e-06 0.058704 -0.040094" quat="0.705216 0.0504844 -0.0504862 0.705388" mass="0.3" diaginertia="0.00216721 0.0020755 0.000259102"/>
+          <joint name="lf_leg_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+          <geom type="mesh" rgba="1 1 1 1" mesh="lf_leg"/>
+          <body name="lf_foot" pos="0 0.08025 -0.249">
+            <inertial pos="5.0068e-08 3.3796e-10 -0.14229" quat="0.707031 0 0 0.707183" mass="0.2" diaginertia="0.0019743 0.0019664 2.9927e-05"/>
+            <joint name="lf_foot_joint" pos="0 0 0" axis="0 1 0" range="-3.14 3.14"/>
+            <geom type="mesh" rgba="1 1 1 1" mesh="lf_foot"/>
+            <site name="L5_footend" pos="0 0 -0.24532" size="0.035 0.035 0.035" type="sphere" rgba="1 1 1 0.1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+      <!--  ================= Torque actuators ================= /-->
+      <motor joint="rf_hip_joint" name="mt_leg0_hip" gear="200"/>
+      <motor joint="rf_leg_joint" name="mt_leg0_leg" gear="200"/>
+      <motor joint="rf_foot_joint" name="mt_leg0_foot" gear="200"/>
+
+      <motor joint="rm_hip_joint" name="mt_leg1_hip" gear="200"/>
+      <motor joint="rm_leg_joint" name="mt_leg1_leg" gear="200"/>
+      <motor joint="rm_foot_joint" name="mt_leg1_foot" gear="200"/>
+
+      <motor joint="rb_hip_joint" name="mt_leg2_hip" gear="200"/>
+      <motor joint="rb_leg_joint" name="mt_leg2_leg" gear="200"/>
+      <motor joint="rb_foot_joint" name="mt_leg2_foot" gear="200"/>
+
+      <motor joint="lb_hip_joint" name="mt_leg3_hip" gear="200"/>
+      <motor joint="lb_leg_joint" name="mt_leg3_leg" gear="200"/>
+      <motor joint="lb_foot_joint" name="mt_leg3_foot" gear="200"/>
+
+      <motor joint="lm_hip_joint" name="mt_leg4_hip" gear="200"/>
+      <motor joint="lm_leg_joint" name="mt_leg4_leg" gear="200"/>
+      <motor joint="lm_foot_joint" name="mt_leg4_foot" gear="200"/>
+
+      <motor joint="lf_hip_joint" name="mt_leg5_hip" gear="200"/>
+      <motor joint="lf_leg_joint" name="mt_leg5_leg" gear="200"/>
+      <motor joint="lf_foot_joint" name="mt_leg5_foot" gear="200"/>
+      
+  </actuator>
+
+  <sensor>
+      <!-- gcs hip pos and tip pos  -->
+      <framepos name="L0_hip_pos_gcs" objtype="body" objname="rf_hip" />  
+      <framepos name="L1_hip_pos_gcs" objtype="body" objname="rm_hip" />
+      <framepos name="L2_hip_pos_gcs" objtype="body" objname="rb_hip" />
+      <framepos name="L3_hip_pos_gcs" objtype="body" objname="lb_hip" />
+      <framepos name="L4_hip_pos_gcs" objtype="body" objname="lm_hip" />
+      <framepos name="L5_hip_pos_gcs" objtype="body" objname="lf_hip" />
+
+      <framepos name="L0_tip_pos_gcs" objtype="site" objname="L0_footend" />
+      <framepos name="L1_tip_pos_gcs" objtype="site" objname="L1_footend" />
+      <framepos name="L2_tip_pos_gcs" objtype="site" objname="L2_footend" />
+      <framepos name="L3_tip_pos_gcs" objtype="site" objname="L3_footend" />
+      <framepos name="L4_tip_pos_gcs" objtype="site" objname="L4_footend" />
+      <framepos name="L5_tip_pos_gcs" objtype="site" objname="L5_footend" />
+
+      <!-- bcs tip pos -->
+      <framepos name="L0_tip_pos_bcs" objtype="site" objname="L0_footend" reftype="body" refname="base"/>
+      <framepos name="L1_tip_pos_bcs" objtype="site" objname="L1_footend" reftype="body" refname="base"/>
+      <framepos name="L2_tip_pos_bcs" objtype="site" objname="L2_footend" reftype="body" refname="base"/>
+      <framepos name="L3_tip_pos_bcs" objtype="site" objname="L3_footend" reftype="body" refname="base"/>
+      <framepos name="L4_tip_pos_bcs" objtype="site" objname="L4_footend" reftype="body" refname="base"/>
+      <framepos name="L5_tip_pos_bcs" objtype="site" objname="L5_footend" reftype="body" refname="base"/>
+
+      <!-- bcs hip pos -->
+      <framepos name="L0_hip_pos_bcs" objtype="body" objname="rf_hip" reftype="body" refname="base"/>
+      <framepos name="L1_hip_pos_bcs" objtype="body" objname="rm_hip" reftype="body" refname="base"/>
+      <framepos name="L2_hip_pos_bcs" objtype="body" objname="rb_hip" reftype="body" refname="base"/>
+      <framepos name="L3_hip_pos_bcs" objtype="body" objname="lb_hip" reftype="body" refname="base"/>
+      <framepos name="L4_hip_pos_bcs" objtype="body" objname="lm_hip" reftype="body" refname="base"/>
+      <framepos name="L5_hip_pos_bcs" objtype="body" objname="lf_hip" reftype="body" refname="base"/>
+
+      <!-- body acc  -->
+      <accelerometer name="body_acc" site="bcs"/>
+
+      <!-- body velocity -->
+      <velocimeter name="body_velo" site="bcs"/>
+
+      <!-- endeffector touch and force -->
+      <touch name="L0_touch_force" site="L0_footend" />
+      <touch name="L1_touch_force" site="L1_footend" />
+      <touch name="L2_touch_force" site="L2_footend" />
+      <touch name="L3_touch_force" site="L3_footend" />
+      <touch name="L4_touch_force" site="L4_footend" />
+      <touch name="L5_touch_force" site="L5_footend" />
+
+    </sensor>
+
+  <contact>
+    <exclude name="rf_leg_foot" body1="rf_leg" body2="rf_foot"/>
+    <exclude name="rm_leg_foot" body1="rm_leg" body2="rm_foot"/>
+    <exclude name="rb_leg_foot" body1="rb_leg" body2="rb_foot"/>
+    <exclude name="lb_leg_foot" body1="lb_leg" body2="lb_foot"/>
+    <exclude name="lm_leg_foot" body1="lm_leg" body2="lm_foot"/>
+    <exclude name="lf_leg_foot" body1="lf_leg" body2="lf_foot"/>
+    <exclude name="rf_leg_hip" body1="rf_leg" body2="rf_hip"/>
+    <exclude name="rm_leg_hip" body1="rm_leg" body2="rm_hip"/>
+    <exclude name="rb_leg_hip" body1="rb_leg" body2="rb_hip"/>
+    <exclude name="lb_leg_hip" body1="lb_leg" body2="lb_hip"/>
+    <exclude name="lm_leg_hip" body1="lm_leg" body2="lm_hip"/>
+    <exclude name="lf_leg_hip" body1="lf_leg" body2="lf_hip"/>    
+    <exclude name="lf_hip_base" body1="lf_hip" body2="base"/>   
+    <exclude name="rf_hip_base" body1="rf_hip" body2="base"/>
+    <exclude name="lm_hip_base" body1="lm_hip" body2="base"/>   
+    <exclude name="rm_hip_base" body1="rm_hip" body2="base"/> 
+    <exclude name="lb_hip_base" body1="lb_hip" body2="base"/>   
+    <exclude name="rb_hip_base" body1="rb_hip" body2="base"/> 
+    <exclude name="rm_leg_base" body1="rm_leg" body2="base"/>
+    <exclude name="lm_leg_base" body1="lm_leg" body2="base"/>
+  </contact>
+
+</mujoco>

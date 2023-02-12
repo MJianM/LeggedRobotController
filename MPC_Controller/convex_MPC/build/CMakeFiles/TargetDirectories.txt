@@ -1,0 +1,3 @@
+/home/mjm/MPC/MyMPC/MPC_Controller/convex_MPC/build/CMakeFiles/rebuild_cache.dir
+/home/mjm/MPC/MyMPC/MPC_Controller/convex_MPC/build/CMakeFiles/edit_cache.dir
+/home/mjm/MPC/MyMPC/MPC_Controller/convex_MPC/build/CMakeFiles/mpc_osqp.dir

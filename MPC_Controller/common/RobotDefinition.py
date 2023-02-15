@@ -23,7 +23,7 @@ class Robot:
             self._bodyInertia = np.array([2.8097, 0, 0,
 				 0, 2.5396, 0,
 				 0, 0, 0.5977])            
-            self._bodyHeight = 0.4
+            self._bodyHeight = 0.35
 
             self._kneeLinkY_offset = 0.0 
             self._abadLocation = np.array([
@@ -39,8 +39,8 @@ class Robot:
 
             self._friction_coeffs = np.ones(4, dtype=DTYPE) * 0.4
             # (roll_pitch_yaw, position, angular_velocity, velocity, gravity_place_holder)
-            self._mpc_weights = [1.0, 10, 0.0,
-                                 0.1, 0.1, 1,
+            self._mpc_weights = [1, 1, 0.0,
+                                 0.1, 0.1, 1.0,
                                  0.1, 0.1, 0.1,
                                  1.0, 1.0, 0.1,
                                  0.0]

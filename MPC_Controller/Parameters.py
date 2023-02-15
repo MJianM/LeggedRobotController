@@ -54,7 +54,7 @@ class Parameters:
 
 
 
-    FSM_print_info = True
+    FSM_print_info = False
     control_mode:FSM_StateName = FSM_StateName.StandStill
     operating_mode:FSM_OperatingMode = FSM_OperatingMode.NORMAL # TEST / NORMAL
 

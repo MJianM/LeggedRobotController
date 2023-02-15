@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from scipy.spatial.transform import Rotation as rot
 from math import sin, cos
 from enum import Enum, auto
 
@@ -102,7 +103,9 @@ def get_rot_from_normals(world_normal, ground_normal):
     Get rotation matrix from two plane normals
     """
     axis = np.cross(world_normal, ground_normal)
-    theta = np.arccos(world_normal.dot(ground_normal))
+    world_normal = world_normal/np.linalg.norm(world_normal)
+    ground_normal = ground_normal/np.linalg.norm(ground_normal)
+    theta = np.arccos(np.clip(world_normal.dot(ground_normal),-1.0,1.0))
     return axis_angle_to_rot(axis, theta)
 
 def quat_to_rpy(q:Quaternion) -> np.ndarray:
@@ -110,15 +113,19 @@ def quat_to_rpy(q:Quaternion) -> np.ndarray:
     Convert a quaternion to RPY. Return
     angles in (roll, pitch, yaw).
     """
-    rpy = np.zeros((3,1), dtype=DTYPE)
-    as_ = np.min([-2.*(q.x*q.z-q.w*q.y),.99999])
-    # roll
-    rpy[0] = np.arctan2(2.*(q.y*q.z+q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
-    # pitch
-    rpy[1] = np.arcsin(as_)
-    # yaw
-    rpy[2] = np.arctan2(2.*(q.x*q.y+q.w*q.z), q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z)
-    return rpy
+
+    quat = np.array([q.x, q.y, q.z, q.w], dtype=DTYPE)
+    return rot.as_euler(rot.from_quat(quat),"xyz",False) # x-y-z extrinstic frame
+
+
+    # as_ = np.min([-2.*(q.x*q.z-q.w*q.y),.99999])
+    # # roll
+    # rpy[0] = np.arctan2(2.*(q.y*q.z+q.w*q.x), q.w*q.w - q.x*q.x - q.y*q.y + q.z*q.z)
+    # # pitch
+    # rpy[1] = np.arcsin(as_)
+    # # yaw
+    # rpy[2] = np.arctan2(2.*(q.x*q.y+q.w*q.z), q.w*q.w + q.x*q.x - q.y*q.y - q.z*q.z)
+    # return rpy
 
 def quat_to_rot(q:Quaternion) -> np.ndarray:
     """
@@ -142,9 +149,9 @@ def rpy_to_rot(rpy)->np.ndarray:
     """
     Convert RPY to a rotation matrix
     """
-    R = coordinateRotation(CoordinateAxis.X, rpy[0]) @\
+    R = coordinateRotation(CoordinateAxis.Z, rpy[2]) @\
         coordinateRotation(CoordinateAxis.Y, rpy[1]) @\
-        coordinateRotation(CoordinateAxis.Z, rpy[2])
+        coordinateRotation(CoordinateAxis.X, rpy[0])
     return R
 
 def rot_to_quat(rot:np.ndarray)->Quaternion:
@@ -185,7 +192,8 @@ def rot_to_quat(rot:np.ndarray)->Quaternion:
     return q
     
 def rot_to_rpy(R:np.ndarray):
-    return quat_to_rpy(rot_to_quat(R))
+    return rot.as_euler(rot.from_matrix(R), 'xyz', False)
+    # return quat_to_rpy(rot_to_quat(R))
 
 def deg2rad(deg:float):
     return deg*math.pi/180

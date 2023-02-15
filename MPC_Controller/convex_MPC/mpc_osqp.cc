@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <assert.h>
+#include <iostream>
 #include <pybind11/eigen.h>
 #include <pybind11/operators.h>
 #include <pybind11/pybind11.h>
@@ -602,7 +603,7 @@ std::vector<double> ConvexMpc::ComputeContactForces(
   qp_weights_ = AsBlockDiagonalMat(qp_weights, planning_horizon_);
   qp_weights_single_ = AsBlockDiagonalMat(qp_weights, 1);
 
-  std::vector<double> error_result;
+  std::vector<double> error_result(num_legs_*3, 0.0);
   // map方法：把连续容器中的数据改为矩阵形式，按照列优先排布
   Eigen::MatrixXd foot_contact_states =
       Eigen::Map<const Eigen::MatrixXd>(foot_contact_states_flattened.data(),
@@ -612,11 +613,16 @@ std::vector<double> ConvexMpc::ComputeContactForces(
 
   // First we compute the foot positions in the world frame.
   DCHECK_EQ(com_roll_pitch_yaw.size(), k3Dim);
-  // 这里的旋转都是绕当前轴的旋转
+
+  // const Quaterniond com_rotation =
+  //     AngleAxisd(com_roll_pitch_yaw[0], Vector3d::UnitX()) *
+  //     AngleAxisd(com_roll_pitch_yaw[1], Vector3d::UnitY()) *
+  //     AngleAxisd(com_roll_pitch_yaw[2], Vector3d::UnitZ());
+  // x-y-z in extrinstic frame
   const Quaterniond com_rotation =
-      AngleAxisd(com_roll_pitch_yaw[0], Vector3d::UnitX()) *
-      AngleAxisd(com_roll_pitch_yaw[1], Vector3d::UnitY()) *
-      AngleAxisd(com_roll_pitch_yaw[2], Vector3d::UnitZ());
+      AngleAxisd(com_roll_pitch_yaw[2], Vector3d::UnitZ()) *
+      AngleAxisd(com_roll_pitch_yaw[1], Vector3d::UnitY()) * 
+      AngleAxisd(com_roll_pitch_yaw[0], Vector3d::UnitX());
 
   DCHECK_EQ(foot_positions_body_frame.size(), k3Dim * num_legs_);
   foot_positions_base_ = Eigen::Map<const MatrixXd>(
@@ -698,6 +704,7 @@ std::vector<double> ConvexMpc::ComputeContactForces(
                             &constraint_lb_, &constraint_ub_);
 
   if (qp_solver_name_ == OSQP) {
+    std::cout << "USING OSQP ..." << std::endl;
     UpdateConstraintsMatrix(foot_friction_coeffs, planning_horizon_, num_legs_,
                             &constraint_);
     // foot_friction_coeff_ << foot_friction_coeffs[0], foot_friction_coeffs[1],
@@ -789,6 +796,7 @@ std::vector<double> ConvexMpc::ComputeContactForces(
 
     if (osqp_solve(workspace_) != 0) {
       if (osqp_is_interrupted()) {
+        std::cout << "OSQP WAS INTERRUPTED." << std::endl;
         return error_result;
       }
     }
@@ -800,9 +808,14 @@ std::vector<double> ConvexMpc::ComputeContactForces(
           -Map<const VectorXd>(workspace_->solution->x, workspace_->data->n); // 这里加了负号，取机器人对地面的作用力
     } else {
       // LOG(WARNING) << "QP does not converge";
+      std::cout << "QP does not converge." << std::endl;
       return error_result;
     }
 
+    // for(auto iter=qp_solution_.begin(); iter!=qp_solution_.end();iter++){
+    //   std::cout << *(iter) << " ";
+    // }
+    // std::cout << std::endl;
     return qp_solution_;
   } else {
     // Solve the QP Problem using qpOASES

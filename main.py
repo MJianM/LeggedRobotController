@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.transform import Rotation as rot
 
 import mujoco
 import mujoco_viewer
@@ -28,7 +29,20 @@ class SimData():
         self.states["qVel"] = simData.qvel[6:]
         self.states["bAngVel"] = simData.qvel[3:6]
         self.states["bLinVel"] = simData.qvel[0:3]
-        self.states["bQuat"] = simData.qpos[3:7]
+        self.states["bQuat"] = simData.qpos[3:7] # w,x,y,z format
+
+        # print("---------------------------------------------------------")
+        # print("[BRIDGE] Printing ....")
+        # print("bQuat:",self.states["bQuat"])
+        # quat = np.array([
+        #     self.states["bQuat"][1],
+        #     self.states["bQuat"][2],
+        #     self.states["bQuat"][3],
+        #     self.states["bQuat"][0]
+        # ], dtype=DTYPE)
+        # print("RPY:", rot.as_euler(rot.from_quat(quat),'xyz',False))
+
+
     def toMujoco(self, simData:mujoco.MjData):
         # tmp = self.states['trq']/200
         # print(type(tmp))
@@ -56,6 +70,7 @@ if __name__ == '__main__':
     # desired command
     desiredCommand = DesiredStateCommand()
     desiredCommand.reset()
+    desiredCommand.updateCommand([0.4,0.,0.])
 
     # FSM
     controlFSM = ControlFSM(robot, stateEstimator, legController, desiredCommand)

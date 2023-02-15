@@ -160,3 +160,54 @@ class LegController:
         self.datas[leg].J[2,0] = s0 * (a * c1 + b * c12)
         self.datas[leg].J[2,1] = c0 * (a * s1 + b * s12)
         self.datas[leg].J[2,2] = c0 * (b * s12)
+
+
+    def inverseKinematics(self, pDes, bendInfo:bool):
+        '''
+            pDes: ndarray (3,1) in the hip frame
+            benInfo:bool 
+            return: ndarray (3,1)
+        '''
+        # t1 > 0 , t2 < 0 for bend in. bend_info=True
+        # t1 < 0 , t2 > 0 for bend out. bend_info=False
+        x = pDes[0,0]
+        y = pDes[1,0]
+        z = pDes[2,0]
+        len_thigh = 0.25
+        len_calf = 0.25
+
+        theta0 = math.atan(-y/z)
+
+        z_tip_sag = math.sqrt(z*z+y*y)
+        cos_shank = (z_tip_sag**2 + x**2 - len_thigh**2 - len_calf**2)/(2*len_thigh*len_calf)
+        if cos_shank>1:
+            cos_shank = 1
+        if cos_shank<-1:
+            cos_shank = -1
+
+        if bendInfo == True:
+            theta2 = - math.acos(cos_shank)
+        else:
+            theta2 = math.acos(cos_shank)
+
+        cos_beta = (z_tip_sag**2 + x**2 + len_thigh**2 - len_calf**2)/(2*len_thigh*math.sqrt(z_tip_sag**2 + x**2))
+        if cos_beta>1:
+            cos_beta = 1
+        if cos_beta<-1:
+            cos_beta = -1
+        beta = math.acos(cos_beta)
+
+        alpha = math.atan(x/z_tip_sag)
+        if x>0:
+            if bendInfo == False:
+                theta1 = -alpha - beta
+            else:
+                theta1 = -alpha + beta
+        else:
+            if bendInfo == False:
+                theta1 = -alpha - beta
+            else:
+                theta1 = -alpha + beta
+
+        return np.array([theta0, theta1, theta2], dtype=DTYPE).reshape((3,1))
+

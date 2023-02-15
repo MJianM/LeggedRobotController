@@ -14,6 +14,8 @@ class StateEstimate:
         self.orientation = Quaternion(1, 0, 0, 0)
 
         self.rBody = np.zeros((3,3), dtype=DTYPE) # rotation of body in the world frame
+
+        # rpy format : X-Y-Z in extrinstic(fixed) frame
         self.rpy = np.zeros((3,1), dtype=DTYPE)  # rpy of body in the world frame
         self.rpy_yaw = np.zeros((3,1),dtype=DTYPE) # rpy of body in the yaw aligned world frame
         self.rpy_ground = np.zeros((3,1), dtype=DTYPE) # rpy of body in yaw aligned ground frame

@@ -9,7 +9,7 @@ class DesiredStateCommand:
         self.yaw_turn_rate = 0.0
         self.mpc_weights = None
 
-    def updateCommand(self, commands, _weight=None):
+    def updateCommand(self, commands:list, _weight=None):
         self.x_vel_cmd = commands[0]
         self.y_vel_cmd = commands[1]
         self.yaw_turn_rate = commands[2]

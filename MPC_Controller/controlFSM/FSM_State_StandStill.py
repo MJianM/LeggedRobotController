@@ -16,14 +16,15 @@ class FSM_State_StandStill(FSM_State):
         
         legNum = self._data._robot._legNum
         for leg in range(legNum):
-            qDes = np.array([0., 0.5, -0.9], dtype=DTYPE).reshape((3,1))
+            qDes = np.array([0., 0.7, -1.5], dtype=DTYPE).reshape((3,1))
             qVel = np.zeros_like(qDes, dtype=DTYPE)
 
             self.jointPDControl(leg, qDes, qVel)
 
 
     def onExit(self):
-        pass
+        self._data._robot._bodyHeight = self._data._stateEstimator.result.position[2,0]
+        return
 
     def checkTransition(self):
         if self._data._iterationCounter > 200:

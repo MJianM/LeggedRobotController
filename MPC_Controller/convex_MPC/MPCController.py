@@ -1,7 +1,7 @@
 # import math
 import time
 import sys
-
+import copy
 import numpy as np
 # import MPC_Controller.convex_MPC.mpc_osqp as mpc
 from MPC_Controller.common.RobotDefinition import RobotType
@@ -104,7 +104,7 @@ class ConvexMPCLocomotion:
         # attention :  ZYX format in google MPC solver / XYZ format in normal 
         # so we should transfer it.
         com_roll_pitch_yaw = data._stateEstimator.result.rpy_yaw.flatten()
-        com_roll_pitch_yaw = list(com_roll_pitch_yaw[::-1])
+        # com_roll_pitch_yaw = list(com_roll_pitch_yaw[::-1])
 
         com_angular_velocity = data._stateEstimator.world_R_yaw_frame.T @ data._stateEstimator.result.omegaWorld
         # com_angular_velocity = data._stateEstimator.ground_R_body_frame @ data._stateEstimator.result.omegaBody
@@ -118,6 +118,19 @@ class ConvexMPCLocomotion:
         desired_com_velocity = [self._x_vel_des, self._y_vel_des, 0.]
         desired_com_rpy = [0.,0.,0.]
         desired_com_angular_velocity = [0.,0.,self._yaw_turn_rate]
+
+
+        print("-----------------------------------------------------------")
+        print("[MPC INFO] Printing MPC Info....")
+        print("ITER:", self.iterationCounter)
+        print("weight:",mpc_weight)
+        print("com_position:",com_position)
+        print("com_vel:",com_velocity)
+        print("com_rpy:",com_roll_pitch_yaw)
+        print("gravity_vec:",gravity_projection_vec)
+        print("com_angvel:",com_angular_velocity)
+        print("mpcTable:",mpcTable)
+        print("footpos:",footPositionsBaseFrame)        
 
         predicted_contact_forces = self._cpp_mpc.compute_contact_forces(
             mpc_weight, # mpc weights list(12,)
@@ -227,16 +240,16 @@ class ConvexMPCLocomotion:
         for leg in range(self.legNum):
             if swingBeginFlag[leg]:
                 # leg begin swinging
-                self.footSwingTrajectories[leg].setInitialPosition(self.foot_positions[leg])
+                self.footSwingTrajectories[leg].setInitialPosition(copy.copy(self.foot_positions[leg]))
                 # foothold heuristic planning
                 stanceTime = self.gait.getStanceTime(leg)*self.dtMPC
                 hipPos = data._robot.getHipLocation(leg)
                 hipPos = coordinateRotation(CoordinateAxis.Z, self._yaw_turn_rate * stanceTime / 2) @ hipPos
                 footHold = hipPos - data._stateEstimator.result.position
 
-                vx = data._stateEstimator.result.vBody[0]
-                vy = data._stateEstimator.result.vBody[1]
-                height = data._stateEstimator.result.position[2]
+                vx = data._stateEstimator.result.vBody[0,0]
+                vy = data._stateEstimator.result.vBody[1,0]
+                height = data._stateEstimator.result.position[2,0]
                 xRel = vx * stanceTime * (0.5 + Parameters.cmpc_bonus_swing) \
                     + 0.03 * (vx - self._x_vel_des) \
                     + (0.5 * height / 9.81) * (vy * self._yaw_turn_rate)
@@ -246,13 +259,13 @@ class ConvexMPCLocomotion:
                 maxRel = 0.3
                 xRel = min(max(xRel, -maxRel), maxRel)
                 yRel = min(max(yRel, -maxRel), maxRel)
-                footHold[0] += xRel
-                footHold[1] += yRel
+                footHold[0,0] += xRel
+                footHold[1,0] += yRel
 
                 self.footSwingTrajectories[leg].setFinalPosition(footHold)
-                self.footSwingTrajectories[leg].setHeight(height/4)
+                self.footSwingTrajectories[leg].setHeight(height/3)
 
-        self.Kp = np.array([70, 0, 0, 0, 70, 0, 0, 0, 50], dtype=DTYPE).reshape((3,3))
+        self.Kp = np.array([50, 0, 0, 0, 50, 0, 0, 0, 30], dtype=DTYPE).reshape((3,3))
         self.Kp_stance = np.zeros_like(self.Kp)
 
         self.Kd = np.array([7, 0, 0, 0, 7, 0, 0, 0, 7], dtype=DTYPE).reshape((3,3))
@@ -268,10 +281,20 @@ class ConvexMPCLocomotion:
                 vDes = self.footSwingTrajectories[leg].getVelocity()
 
                 pDes = pDes - data._robot.getHipLocation(leg)
+                if pDes[2,0] > 0.0:
+                    a = pDes
+                qDes = data._legController.inverseKinematics(pDes, True)
 
-                np.copyto(data._legController.commands[leg].pDes, pDes, casting="same_kind")
+                print("-----------------------------------------------------")
+                print("[LEG CONTROL] Printing ...")
+                print("leg:",leg)
+                print('pDes:',pDes.flatten())
+                print("qDes:", qDes.flatten())
+                print("q:", data._legController.datas[leg].q.flatten())
+
+                np.copyto(data._legController.commands[leg].qDes, qDes, casting="same_kind")
                 np.copyto(data._legController.commands[leg].vDes, vDes, casting="same_kind")
-                np.copyto(data._legController.commands[leg].kpCartesian, self.Kp, casting="same_kind")
+                np.copyto(data._legController.commands[leg].kpJoint, self.Kp, casting="same_kind")
                 np.copyto(data._legController.commands[leg].kdCartesian, self.Kd, casting="same_kind")
 
             else:

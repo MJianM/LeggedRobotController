@@ -39,9 +39,9 @@ class Robot:
 
             self._friction_coeffs = np.ones(4, dtype=DTYPE) * 0.4
             # (roll_pitch_yaw, position, angular_velocity, velocity, gravity_place_holder)
-            self._mpc_weights = [1.0, 1.5, 0.0,
-                                 0.0, 0.0, 5,
-                                 0.0, 0.0, 0.1,
+            self._mpc_weights = [1.0, 10, 0.0,
+                                 0.1, 0.1, 1,
+                                 0.1, 0.1, 0.1,
                                  1.0, 1.0, 0.1,
                                  0.0]
 

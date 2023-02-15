@@ -15,6 +15,7 @@ class StateEstimate:
 
         self.rBody = np.zeros((3,3), dtype=DTYPE) # rotation of body in the world frame
         self.rpy = np.zeros((3,1), dtype=DTYPE)  # rpy of body in the world frame
+        self.rpy_yaw = np.zeros((3,1),dtype=DTYPE) # rpy of body in the yaw aligned world frame
         self.rpy_ground = np.zeros((3,1), dtype=DTYPE) # rpy of body in yaw aligned ground frame
 
         # ground normal in the world frame
@@ -38,6 +39,7 @@ class StateEstimator:
 
         # rotation from ground frame to base frame
         self.ground_R_body_frame:np.ndarray = None
+        self.world_R_yaw_frame:np.ndarray = None
         self.body_height:float = self._robot._bodyHeight
         self.result.position[2] = self.body_height
 
@@ -47,6 +49,7 @@ class StateEstimator:
         self._contactPhase = self._phase
         self._foot_contact_history:np.ndarray = None
         self.ground_R_body_frame:np.ndarray = None
+        self.world_R_yaw_frame:np.ndarray = None
         self.body_height = self._robot._bodyHeight
         self.result.position[2] = self.body_height
 
@@ -62,8 +65,8 @@ class StateEstimator:
     def update(self, body_states:dict):
         self.result.orientation.w = body_states["bQuat"][0]
         self.result.orientation.x = body_states["bQuat"][1]
-        self.result.orientation.x = body_states["bQuat"][2]
-        self.result.orientation.x = body_states["bQuat"][3]
+        self.result.orientation.y = body_states["bQuat"][2]
+        self.result.orientation.z = body_states["bQuat"][3]
 
         self.result.vWorld[0, 0] = body_states["bLinVel"][0]
         self.result.vWorld[1, 0] = body_states["bLinVel"][1]
@@ -84,11 +87,13 @@ class StateEstimator:
         self.result.omegaBody = self.result.rBody.T @ self.result.omegaWorld
 
         world_R_yaw_frame = rpy_to_rot([0,0,self.result.rpy[2]])
+        self.world_R_yaw_frame = world_R_yaw_frame
         yaw_R_ground_frame = get_rot_from_normals(np.array([0,0,1], dtype=DTYPE),
                                                     self.result.ground_normal_yaw)
         self.ground_R_body_frame = yaw_R_ground_frame.T @ world_R_yaw_frame.T @ self.result.rBody
 
-
+        # RPY of body in yaw aligned world frame
+        self.result.rpy_yaw = rot_to_rpy(self.world_R_yaw_frame.T @ self.result.rBody)
         # RPY of body in yaw aligned ground frame
         self.result.rpy_ground = rot_to_rpy(self.ground_R_body_frame)
 

@@ -19,6 +19,7 @@ except:
     print("mpc module can not be imported.")
     sys.exit()
 
+
 class ConvexMPCLocomotion:
     def __init__(self, _dt:float, _iterationsBetweenMPC:int):
         self.iterationsBetweenMPC = int(_iterationsBetweenMPC)
@@ -89,21 +90,24 @@ class ConvexMPCLocomotion:
 
     def solveMPC(self, data:ControlFSMData):
         '''
-            solve MPC in ground frame
+            
+            solve MPC in yaw aligned world frame
         '''
         timer = time.time()
         
         mpc_weight = data._robot._mpc_weights
         com_position = list(data._stateEstimator.result.position.flatten()) # ground frame
-        com_velocity = data._stateEstimator.ground_R_body_frame @ data._stateEstimator.result.vBody
+        com_velocity = data._stateEstimator.world_R_yaw_frame.T @ data._stateEstimator.result.vWorld
+        # com_velocity = data._stateEstimator.ground_R_body_frame @ data._stateEstimator.result.vBody
         com_velocity = list(com_velocity.flatten())
         gravity_projection_vec = [0,0,1]
         # attention :  ZYX format in google MPC solver / XYZ format in normal 
         # so we should transfer it.
-        com_roll_pitch_yaw = data._stateEstimator.result.rpy_ground.flatten()
+        com_roll_pitch_yaw = data._stateEstimator.result.rpy_yaw.flatten()
         com_roll_pitch_yaw = list(com_roll_pitch_yaw[::-1])
 
-        com_angular_velocity = data._stateEstimator.ground_R_body_frame @ data._stateEstimator.result.omegaBody
+        com_angular_velocity = data._stateEstimator.world_R_yaw_frame.T @ data._stateEstimator.result.omegaWorld
+        # com_angular_velocity = data._stateEstimator.ground_R_body_frame @ data._stateEstimator.result.omegaBody
         com_angular_velocity = list(com_angular_velocity.flatten())
 
         mpcTable = self.gait.getMpcTable()
@@ -131,9 +135,31 @@ class ConvexMPCLocomotion:
             desired_com_angular_velocity  # desired_com_angular_velocity
         )
 
+        total_force_body:np.ndarray = np.zeros((3,1),dtype=DTYPE)
+        total_torque_body = np.zeros((3,1),dtype=DTYPE)
+
+        body_R_yaw = data._stateEstimator.result.rBody.T @ data._stateEstimator.world_R_yaw_frame
         for leg in range(data._robot._legNum):
-            self.f_ff[leg] = data._stateEstimator.ground_R_body_frame.T @ \
+            self.f_ff[leg] = body_R_yaw @ \
                 np.array(predicted_contact_forces[leg*3:leg*3+3],dtype=DTYPE).reshape((3,1))
+            total_force_body -= self.f_ff[leg]
+            total_torque_body += np.cross(self.foot_positions[leg].flatten(), -self.f_ff[leg].flatten()).reshape((3,1))
+
+
+        print("-----------------------------------------------------------")
+        print("[MPC INFO] Printing MPC Info....")
+        print("ITER:", self.iterationCounter)
+        print("FRC:",self.f_ff.flatten())
+
+        print("TOTAL_F:",(data._stateEstimator.result.rBody @ total_force_body).flatten())
+        print("TOTAL_T:",(data._stateEstimator.result.rBody @ total_torque_body).flatten())
+
+        print("RPY:", data._stateEstimator.result.rpy.flatten())
+        # print("QUAT:",data._stateEstimator.result.orientation.w,
+        #             data._stateEstimator.result.orientation.x,
+        #             data._stateEstimator.result.orientation.y,
+        #             data._stateEstimator.result.orientation.z)
+        print("GAIT:",self.gait.contactFlag.flatten())
 
         if Parameters.cmpc_print_solver_time:
             print("MPC Update Time %.3f s\n"%(time.time()-timer))     
@@ -188,12 +214,14 @@ class ConvexMPCLocomotion:
 
         # update gait status
         swingBeginFlag = self.gait.update(self.iterationCounter, self.iterationsBetweenMPC)
-        self.iterationCounter += 1
         data._stateEstimator.setContactPhase(self.gait.contactFlag)
 
         # solve MPC
         if self.iterationCounter % self.iterationsBetweenMPC == 0:
             self.solveMPC(data)
+
+        # counter
+        self.iterationCounter += 1
 
         # swing trajectory planning
         for leg in range(self.legNum):
@@ -252,8 +280,12 @@ class ConvexMPCLocomotion:
                 np.copyto(data._legController.commands[leg].forceFeedForward, self.f_ff[leg], casting="same_kind")
                 # np.copyto(data._legController.commands[leg].kdJoint, np.identity(3, dtype=DTYPE)*0.2, casting=CASTING)
 
-        print("-----------------------------------------------------------")
-        print("[MPC INFO] Printing MPC Info....")
-        print("ITER:", self.iterationCounter)
-        print("FRC:",self.f_ff.flatten())
-        print("RPY:", data._stateEstimator.result.rpy.flatten())
+        # print("-----------------------------------------------------------")
+        # print("[MPC INFO] Printing MPC Info....")
+        # print("ITER:", self.iterationCounter)
+        # print("FRC:",self.f_ff.flatten())
+        # print("RPY:", data._stateEstimator.result.rpy.flatten())
+        # print("QUAT:",data._stateEstimator.result.orientation.w,
+        #             data._stateEstimator.result.orientation.x,
+        #             data._stateEstimator.result.orientation.y,
+        #             data._stateEstimator.result.orientation.z)

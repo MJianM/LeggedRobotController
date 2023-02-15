@@ -63,13 +63,13 @@ class GaitScheduler():
 
         for i in range(self.nSegment):
 
-            iter = (self.iteration + i + 1) % self.nSegment
+            iter = (self.iteration + i) % self.nSegment
             progress = iter - self.offsets
             for leg in range(self.legNum):
                 if progress[leg] < 0:
                     progress[leg] += self.nSegment
 
-                if progress[leg] > self.durations[leg]:
+                if progress[leg] >= self.durations[leg]:  # 这里注意是 >=
                     self.__mpc_table[self.legNum*i + leg] = 0
                 else:
                     self.__mpc_table[self.legNum*i + leg] = 1
